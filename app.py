@@ -34,7 +34,7 @@ def load_model():
     model = models.mobilenet_v2(weights=None)
     model.classifier[1] = nn.Linear(model.last_channel, 20)
     # map_location='cpu' SANGAT PENTING agar bisa jalan di server gratisan yang tidak punya GPU
-    model.load_state_dict(torch.load('batik_model.pth', map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load('batik_model_best.pth', map_location=torch.device('cpu')))
     model.eval()
     return model
 
