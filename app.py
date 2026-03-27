@@ -34,7 +34,7 @@ def load_model():
     model = models.mobilenet_v2(weights=None)
     model.classifier[1] = nn.Linear(model.last_channel, 20)
     # map_location='cpu' SANGAT PENTING agar bisa jalan di server gratisan yang tidak punya GPU
-    model.load_state_dict(torch.load('batik_model_best.pth', map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load('batik_model_best_V2_Unfitted.pth', map_location=torch.device('cpu')))
     model.eval()
     return model
 
@@ -68,6 +68,7 @@ with tab2:
         file_gambar = input_galeri
 
 # 6. LOGIKA PEMROSESAN AI
+# 6. LOGIKA PEMROSESAN AI
 if file_gambar is not None:
     # Tampilkan gambar yang akan dianalisis menyesuaikan lebar layar HP
     image = Image.open(file_gambar).convert('RGB')
@@ -81,25 +82,38 @@ if file_gambar is not None:
             
             # Ubah output matriks mentah menjadi persentase (Softmax)
             probabilities = F.softmax(output[0], dim=0)
-            confidence, pred_id = torch.max(probabilities, 0)
             
-            id_tebakan = str(pred_id.item())
-            persentase = confidence.item() * 100
+            # JURUS TOP-3 PREDICTIONS (Ambil 3 probabilitas tertinggi)
+            top3_prob, top3_id = torch.topk(probabilities, 3)
 
     # 7. TAMPILKAN HASIL DARI DATABASE
     st.divider() # Garis pemisah UI
+    st.success("✅ Analisis Selesai! Berikut 3 kemungkinan teratas:")
     
-    if id_tebakan in db_batik:
-        data = db_batik[id_tebakan]
+    # Looping untuk menampilkan 3 hasil prediksi
+    for i in range(3):
+        id_tebakan = str(top3_id[i].item())
+        persentase = top3_prob[i].item() * 100
         
-        # Tampilkan hasil dengan format yang elegan
-        st.success(f"✅ Analisis Selesai! (Tingkat Keyakinan: {persentase:.1f}%)")
-        st.header(f"✨ {data['nama']}")
-        st.markdown(f"**📍 Asal Daerah:** {data['asal']}")
-        st.info(f"**📖 Filosofi:** {data['filosofi']}")
-        
-        # Tambahan efek balon perayaan jika AI sangat yakin (opsional, bagus untuk demo)
-        if persentase > 80.0:
-            st.balloons()
-    else:
-        st.warning(f"Terdeteksi sebagai ID {id_tebakan}, tapi data belum ada di database.json.")
+        # Cek apakah ID ada di database.json
+        if id_tebakan in db_batik:
+            data = db_batik[id_tebakan]
+            
+            # Membuat desain "Card" (Kartu) yang elegan untuk setiap tebakan
+            with st.container():
+                st.subheader(f"#{i+1} - {data['nama']}")
+                
+                # Menampilkan Bar Persentase Visual (Progress Bar)
+                st.write(f"**Tingkat Keyakinan: {persentase:.1f}%**")
+                # Streamlit progress bar butuh angka integer 0-100
+                st.progress(int(persentase)) 
+                
+                st.markdown(f"**📍 Asal Daerah:** {data['asal']}")
+                st.info(f"**📖 Filosofi:** {data['filosofi']}")
+                st.write("---") # Garis pemisah antar kartu
+                
+                # Efek balon perayaan JIKA tebakan pertama sangat yakin (> 80%)
+                if i == 0 and persentase > 80.0:
+                    st.balloons()
+        else:
+            st.warning(f"Terdeteksi sebagai ID Kelas {id_tebakan} ({persentase:.1f}%), tapi data belum ada di database.json.")
