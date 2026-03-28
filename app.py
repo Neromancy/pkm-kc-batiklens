@@ -21,12 +21,23 @@ st.set_page_config(
 )
 
 # =====================================================================
-# 2. CUSTOM CSS (Enhanced Mobile UI)
+# 2. CUSTOM CSS (Using Provided Color Palette)
 # =====================================================================
 st.markdown("""
     <style>
-        /* Global */
-        .stApp { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        /* Color Variables */
+        :root {
+            --color-dark: #3E333F;
+            --color-red: #FC4442;
+            --color-yellow: #F0E19E;
+            --color-light: #F2F2F2;
+        }
+        
+        /* Global Background */
+        .stApp { 
+            background-color: var(--color-light);
+        }
+        
         .main .block-container { 
             padding-top: 1rem; 
             padding-bottom: 2rem;
@@ -35,43 +46,96 @@ st.markdown("""
         
         /* Title Styling */
         h1 { 
-            color: white; 
+            color: var(--color-dark); 
             text-align: center; 
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             font-size: 2rem !important;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
         }
+        
         .subtitle { 
-            color: rgba(255,255,255,0.9); 
+            color: var(--color-dark); 
             text-align: center; 
             margin-bottom: 1.5rem;
             font-size: 1rem;
+            opacity: 0.8;
         }
         
         /* Prediction Cards */
         .prediction-card {
             background: white;
             border-radius: 16px;
-            padding: 1rem;
-            margin: 0.5rem 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-left: 4px solid #667eea;
+            padding: 1.25rem;
+            margin: 0.75rem 0;
+            box-shadow: 0 4px 12px rgba(62, 51, 63, 0.1);
+            border-left: 5px solid var(--color-dark);
+            transition: transform 0.2s ease;
         }
-        .prediction-card.high-confidence { border-left-color: #10b981; }
-        .prediction-card.medium-confidence { border-left-color: #f59e0b; }
-        .prediction-card.low-confidence { border-left-color: #ef4444; }
         
+        .prediction-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(62, 51, 63, 0.15);
+        }
+        
+        .prediction-card.high-confidence { 
+            border-left-color: var(--color-red); 
+        }
+        
+        .prediction-card.medium-confidence { 
+            border-left-color: var(--color-yellow); 
+        }
+        
+        .prediction-card.low-confidence { 
+            border-left-color: #999999; 
+        }
+        
+        /* Card Title */
+        .prediction-card h4 {
+            color: var(--color-dark);
+            margin: 0 0 0.75rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        /* Confidence Text */
+        .confidence-label {
+            color: var(--color-dark);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .confidence-value {
+            color: var(--color-dark);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        /* Confidence Bar */
         .confidence-bar {
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
+            height: 10px;
+            background: var(--color-light);
+            border-radius: 6px;
             margin: 0.5rem 0;
             overflow: hidden;
         }
+        
         .confidence-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 4px;
+            background: linear-gradient(90deg, var(--color-red), var(--color-yellow));
+            border-radius: 6px;
             transition: width 0.3s ease;
+        }
+        
+        /* Card Content */
+        .prediction-card p {
+            color: var(--color-dark);
+            margin: 0.5rem 0 0 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .prediction-card strong {
+            color: var(--color-dark);
         }
         
         /* Image Container */
@@ -80,32 +144,103 @@ st.markdown("""
             border-radius: 16px;
             padding: 1rem;
             margin: 1rem 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(62, 51, 63, 0.1);
         }
         
-        /* Buttons & Tabs */
+        /* Buttons */
+        .stButton>button {
+            background-color: var(--color-dark);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .stButton>button:hover {
+            background-color: var(--color-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(252, 68, 66, 0.3);
+        }
+        
+        /* Tabs */
         .stTabs [data-baseweb="tab-list"] { 
             gap: 0.5rem; 
-            background: rgba(255,255,255,0.2);
+            background: white;
             border-radius: 12px;
             padding: 0.25rem;
+            box-shadow: 0 2px 8px rgba(62, 51, 63, 0.1);
         }
+        
         .stTabs [data-baseweb="tab"] {
+            background: var(--color-light);
+            border-radius: 10px;
+            color: var(--color-dark);
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+        }
+        
+        .stTabs [aria-selected="true"] {
+            background: var(--color-dark);
+            color: white;
+        }
+        
+        /* Info/Alert Boxes */
+        .stAlert {
+            border-radius: 12px;
+            border: none;
+        }
+        
+        .stAlert[data-testid="stAlert"] {
+            background-color: var(--color-light);
+            color: var(--color-dark);
+        }
+        
+        .stInfo {
+            background-color: rgba(240, 225, 158, 0.2);
+            border-left: 4px solid var(--color-yellow);
+        }
+        
+        .stSuccess {
+            background-color: rgba(242, 242, 242, 0.8);
+            border-left: 4px solid var(--color-dark);
+        }
+        
+        /* Spinner */
+        .stSpinner div {
+            color: var(--color-dark);
+        }
+        
+        /* File Uploader */
+        .stFileUploader {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(62, 51, 63, 0.1);
+        }
+        
+        /* Divider */
+        hr {
+            border-color: var(--color-light);
+            opacity: 0.5;
+        }
+        
+        /* Expander */
+        .streamlit-expanderHeader {
+            color: var(--color-dark);
             background: white;
             border-radius: 10px;
-            color: #374151;
-            font-weight: 500;
-        }
-        .stTabs [aria-selected="true"] {
-            background: #667eea !important;
-            color: white !important;
+            padding: 0.75rem;
         }
         
         /* Mobile Optimization */
         @media (max-width: 768px) {
             h1 { font-size: 1.5rem !important; }
             .subtitle { font-size: 0.9rem; }
-            .prediction-card { padding: 0.875rem; }
+            .prediction-card { padding: 1rem; }
+            .prediction-card h4 { font-size: 1.1rem; }
         }
     </style>
 """, unsafe_allow_html=True)
@@ -141,20 +276,16 @@ db_batik = load_database()
 def load_model():
     """Load fine-tuned ResNet-18 model with CPU compatibility"""
     try:
-        # Initialize ResNet-18 with pre-trained weights (for architecture)
         model = models.resnet18(weights=None)
-        
-        # Modify final layer to match your number of classes (20)
         num_ftrs = model.fc.in_features
         model.fc = nn.Sequential(
             nn.Dropout(p=0.3),
-            nn.Linear(num_ftrs, 20)  # Match your trained output
+            nn.Linear(num_ftrs, 20)
         )
         
-        # Load state dict with CPU mapping
         model_path = 'batik_model_resnet_best.pth'
         if not os.path.exists(model_path):
-            model_path = 'batik_model_best_V2_Unfitted.pth'  # Fallback
+            model_path = 'batik_model_best_V2_Unfitted.pth'
             
         model.load_state_dict(
             torch.load(model_path, map_location=torch.device('cpu'), weights_only=True)
@@ -168,20 +299,20 @@ def load_model():
 model = load_model()
 
 # =====================================================================
-# 6. IMAGE PREPROCESSING (Must Match Training)
+# 6. IMAGE PREPROCESSING
 # =====================================================================
 def preprocess_image(image: Image.Image) -> torch.Tensor:
     """Preprocess image to match ResNet-18 training transforms"""
     transform = transforms.Compose([
-        transforms.Resize(256),                    # Match validation transform
-        transforms.CenterCrop(224),                # Match validation transform
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
-        transforms.Normalize(                      # ImageNet stats
+        transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
         )
     ])
-    return transform(image).unsqueeze(0)  # Add batch dimension
+    return transform(image).unsqueeze(0)
 
 # =====================================================================
 # 7. PREDICTION FUNCTION
@@ -203,7 +334,7 @@ def predict(model, image_tensor, top_k=3):
         return results
 
 # =====================================================================
-# 8. UI: IMAGE INPUT (Camera + Gallery Tabs)
+# 8. UI: IMAGE INPUT
 # =====================================================================
 tab1, tab2 = st.tabs(["📸 Kamera", "📁 Galeri"])
 
@@ -231,7 +362,6 @@ with tab2:
 # 9. MAIN PREDICTION LOGIC
 # =====================================================================
 if uploaded_file is not None and model is not None:
-    # Display uploaded image
     image = Image.open(uploaded_file).convert('RGB')
     
     with st.container():
@@ -239,15 +369,12 @@ if uploaded_file is not None and model is not None:
         st.image(image, caption="📷 Gambar yang dianalisis", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Prediction button for better UX
     if st.button("🔍 Analisis Motif Batik", type="primary", use_container_width=True):
         with st.spinner("🤖 AI sedang menganalisis pola batik..."):
             try:
-                # Preprocess and predict
                 img_tensor = preprocess_image(image)
                 predictions = predict(model, img_tensor, top_k=3)
                 
-                # Display results
                 st.divider()
                 st.success("✅ Analisis Selesai!")
                 
@@ -255,7 +382,6 @@ if uploaded_file is not None and model is not None:
                     class_id = pred['class_id']
                     confidence = pred['confidence']
                     
-                    # Determine confidence tier for styling
                     if confidence >= 70:
                         tier = "high-confidence"
                         emoji = "🎯"
@@ -266,7 +392,6 @@ if uploaded_file is not None and model is not None:
                         tier = "low-confidence"
                         emoji = "❓"
                     
-                    # Fetch database info
                     if class_id in db_batik:
                         data = db_batik[class_id]
                         name = data.get('nama', f'Kelas {class_id}')
@@ -277,29 +402,26 @@ if uploaded_file is not None and model is not None:
                         origin = 'Data belum tersedia'
                         philosophy = 'Silakan update database.json'
                     
-                    # Render prediction card
                     st.markdown(f"""
                         <div class="prediction-card {tier}">
-                            <h4 style="margin:0 0 0.5rem 0">{emoji} #{i+1} - {name}</h4>
+                            <h4>{emoji} #{i+1} - {name}</h4>
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem">
-                                <span style="font-size:0.9rem;color:#6b7280">Keyakinan</span>
-                                <span style="font-weight:600;color:#374151">{confidence:.1f}%</span>
+                                <span class="confidence-label">Keyakinan</span>
+                                <span class="confidence-value">{confidence:.1f}%</span>
                             </div>
                             <div class="confidence-bar">
                                 <div class="confidence-fill" style="width:{min(confidence, 100)}%"></div>
                             </div>
-                            <p style="margin:0.5rem 0 0 0;font-size:0.9rem">
+                            <p>
                                 <strong>📍 Asal:</strong> {origin}<br>
                                 <strong>📖 Filosofi:</strong> {philosophy}
                             </p>
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    # Celebration effect for high-confidence top prediction
                     if i == 0 and confidence >= 80:
                         st.balloons()
                 
-                # Warning for low-confidence predictions
                 if predictions[0]['confidence'] < 40:
                     st.warning("⚠️ Keyakinan rendah. Coba ambil foto dengan pencahayaan lebih baik atau sudut yang lebih jelas.")
                     
@@ -335,14 +457,14 @@ with st.expander("❓ Bantuan & Informasi"):
     """)
 
 st.markdown("""
-    <div style="text-align:center;color:rgba(255,255,255,0.8);font-size:0.8rem;margin-top:2rem">
+    <div style="text-align:center;color:#3E333F;opacity:0.7;font-size:0.8rem;margin-top:2rem">
         <p>🔬 BatikLens AI • Prototipe PKM-KC 2026</p>
         <p>Model: ResNet-18 • Accuracy: 73.98%</p>
     </div>
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# 11. ERROR HANDLING: Model/Database Missing
+# 11. ERROR HANDLING
 # =====================================================================
 if model is None:
     st.error("⚠️ Model tidak dapat dimuat. Pastikan file `batik_model_resnet_best.pth` tersedia.")
