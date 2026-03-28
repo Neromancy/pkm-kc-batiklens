@@ -23,11 +23,15 @@ st.set_page_config(
 # =====================================================================
 # 2. CUSTOM CSS (Using Provided Color Palette)
 # =====================================================================
+# =====================================================================
+# 2. CUSTOM CSS (Dark Brown Text + Color Palette)
+# =====================================================================
 st.markdown("""
     <style>
         /* Color Variables */
         :root {
             --color-dark: #3E333F;
+            --color-brown: #5D4E60;
             --color-red: #FC4442;
             --color-yellow: #F0E19E;
             --color-light: #F2F2F2;
@@ -38,27 +42,33 @@ st.markdown("""
             background-color: var(--color-light);
         }
         
+        /* MAIN TEXT - GELAP COKLAT */
+        h1, h2, h3, h4, h5, h6, p, div, span, label {
+            color: var(--color-dark) !important;
+        }
+        
         .main .block-container { 
             padding-top: 1rem; 
             padding-bottom: 2rem;
             max-width: 600px;
         }
         
-        /* Title Styling */
+        /* Title Styling - GELAP COKLAT PEKAT */
         h1 { 
-            color: var(--color-dark); 
+            color: var(--color-dark) !important; 
             text-align: center; 
             font-size: 2rem !important;
             font-weight: 700;
             margin-bottom: 0.5rem;
+            text-shadow: none;
         }
         
         .subtitle { 
-            color: var(--color-dark); 
+            color: var(--color-brown) !important; 
             text-align: center; 
             margin-bottom: 1.5rem;
             font-size: 1rem;
-            opacity: 0.8;
+            font-weight: 500;
         }
         
         /* Prediction Cards */
@@ -67,14 +77,8 @@ st.markdown("""
             border-radius: 16px;
             padding: 1.25rem;
             margin: 0.75rem 0;
-            box-shadow: 0 4px 12px rgba(62, 51, 63, 0.1);
+            box-shadow: 0 4px 12px rgba(62, 51, 63, 0.15);
             border-left: 5px solid var(--color-dark);
-            transition: transform 0.2s ease;
-        }
-        
-        .prediction-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(62, 51, 63, 0.15);
         }
         
         .prediction-card.high-confidence { 
@@ -85,27 +89,22 @@ st.markdown("""
             border-left-color: var(--color-yellow); 
         }
         
-        .prediction-card.low-confidence { 
-            border-left-color: #999999; 
-        }
-        
-        /* Card Title */
         .prediction-card h4 {
-            color: var(--color-dark);
+            color: var(--color-dark) !important;
             margin: 0 0 0.75rem 0;
             font-size: 1.25rem;
             font-weight: 600;
         }
         
-        /* Confidence Text */
+        /* Confidence Text - GELAP */
         .confidence-label {
-            color: var(--color-dark);
+            color: var(--color-brown) !important;
             font-size: 0.9rem;
-            opacity: 0.8;
+            font-weight: 500;
         }
         
         .confidence-value {
-            color: var(--color-dark);
+            color: var(--color-dark) !important;
             font-weight: 700;
             font-size: 1rem;
         }
@@ -113,7 +112,7 @@ st.markdown("""
         /* Confidence Bar */
         .confidence-bar {
             height: 10px;
-            background: var(--color-light);
+            background: #E8E4E8;
             border-radius: 6px;
             margin: 0.5rem 0;
             overflow: hidden;
@@ -126,16 +125,15 @@ st.markdown("""
             transition: width 0.3s ease;
         }
         
-        /* Card Content */
         .prediction-card p {
-            color: var(--color-dark);
+            color: var(--color-brown) !important;
             margin: 0.5rem 0 0 0;
             font-size: 0.9rem;
             line-height: 1.5;
         }
         
         .prediction-card strong {
-            color: var(--color-dark);
+            color: var(--color-dark) !important;
         }
         
         /* Image Container */
@@ -144,28 +142,26 @@ st.markdown("""
             border-radius: 16px;
             padding: 1rem;
             margin: 1rem 0;
-            box-shadow: 0 4px 12px rgba(62, 51, 63, 0.1);
+            box-shadow: 0 4px 12px rgba(62, 51, 63, 0.15);
         }
         
         /* Buttons */
         .stButton>button {
             background-color: var(--color-dark);
-            color: white;
+            color: white !important;
             border: none;
             border-radius: 10px;
             padding: 0.75rem 1.5rem;
             font-weight: 600;
             font-size: 1rem;
-            transition: all 0.3s ease;
         }
         
         .stButton>button:hover {
             background-color: var(--color-red);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(252, 68, 66, 0.3);
+            color: white !important;
         }
         
-        /* Tabs */
+        /* Tabs - GELAP COKLAT */
         .stTabs [data-baseweb="tab-list"] { 
             gap: 0.5rem; 
             background: white;
@@ -177,43 +173,42 @@ st.markdown("""
         .stTabs [data-baseweb="tab"] {
             background: var(--color-light);
             border-radius: 10px;
-            color: var(--color-dark);
+            color: var(--color-dark) !important;
             font-weight: 600;
             padding: 0.5rem 1rem;
         }
         
         .stTabs [aria-selected="true"] {
             background: var(--color-dark);
-            color: white;
+            color: white !important;
         }
         
-        /* Info/Alert Boxes */
+        /* Info/Alert Boxes - TEKS GELAP */
         .stAlert {
             border-radius: 12px;
             border: none;
+            color: var(--color-dark) !important;
         }
         
-        .stAlert[data-testid="stAlert"] {
-            background-color: var(--color-light);
-            color: var(--color-dark);
+        .stAlert * {
+            color: var(--color-dark) !important;
         }
         
-        .stInfo {
-            background-color: rgba(240, 225, 158, 0.2);
-            border-left: 4px solid var(--color-yellow);
+        .stInfo, .stInfo * {
+            color: var(--color-dark) !important;
+            background-color: rgba(240, 225, 158, 0.3) !important;
         }
         
-        .stSuccess {
-            background-color: rgba(242, 242, 242, 0.8);
-            border-left: 4px solid var(--color-dark);
+        .stSuccess, .stSuccess * {
+            color: var(--color-dark) !important;
+            background-color: rgba(242, 242, 242, 0.9) !important;
         }
         
-        /* Spinner */
-        .stSpinner div {
-            color: var(--color-dark);
+        .stWarning, .stWarning * {
+            color: var(--color-dark) !important;
         }
         
-        /* File Uploader */
+        /* File Uploader - TEKS GELAP */
         .stFileUploader {
             background: white;
             border-radius: 12px;
@@ -221,18 +216,28 @@ st.markdown("""
             box-shadow: 0 2px 8px rgba(62, 51, 63, 0.1);
         }
         
-        /* Divider */
-        hr {
-            border-color: var(--color-light);
-            opacity: 0.5;
+        .stFileUploader * {
+            color: var(--color-dark) !important;
         }
         
-        /* Expander */
-        .streamlit-expanderHeader {
-            color: var(--color-dark);
+        /* Expander - TEKS GELAP */
+        .streamlit-expanderHeader, .streamlit-expanderHeader * {
+            color: var(--color-dark) !important;
             background: white;
-            border-radius: 10px;
-            padding: 0.75rem;
+        }
+        
+        .streamlit-expanderContent, .streamlit-expanderContent * {
+            color: var(--color-brown) !important;
+            background: white;
+        }
+        
+        /* Footer - GELAP COKLAT */
+        footer {
+            color: var(--color-brown) !important;
+        }
+        
+        footer * {
+            color: var(--color-brown) !important;
         }
         
         /* Mobile Optimization */
@@ -240,7 +245,6 @@ st.markdown("""
             h1 { font-size: 1.5rem !important; }
             .subtitle { font-size: 0.9rem; }
             .prediction-card { padding: 1rem; }
-            .prediction-card h4 { font-size: 1.1rem; }
         }
     </style>
 """, unsafe_allow_html=True)
