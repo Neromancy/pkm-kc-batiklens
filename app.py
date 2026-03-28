@@ -26,6 +26,9 @@ st.set_page_config(
 # =====================================================================
 # 2. CUSTOM CSS (Dark Brown Text + Color Palette)
 # =====================================================================
+# =====================================================================
+# 2. CUSTOM CSS (Dark Background = Light Text)
+# =====================================================================
 st.markdown("""
     <style>
         /* Color Variables */
@@ -35,16 +38,12 @@ st.markdown("""
             --color-red: #FC4442;
             --color-yellow: #F0E19E;
             --color-light: #F2F2F2;
+            --color-white: #FFFFFF;
         }
         
         /* Global Background */
         .stApp { 
             background-color: var(--color-light);
-        }
-        
-        /* MAIN TEXT - GELAP COKLAT */
-        h1, h2, h3, h4, h5, h6, p, div, span, label {
-            color: var(--color-dark) !important;
         }
         
         .main .block-container { 
@@ -53,14 +52,18 @@ st.markdown("""
             max-width: 600px;
         }
         
-        /* Title Styling - GELAP COKLAT PEKAT */
+        /* DEFAULT TEXT - Dark Brown (for light backgrounds) */
+        body, h1, h2, h3, h4, h5, h6, p, div, span, label {
+            color: var(--color-dark);
+        }
+        
+        /* Title Styling */
         h1 { 
             color: var(--color-dark) !important; 
             text-align: center; 
             font-size: 2rem !important;
             font-weight: 700;
             margin-bottom: 0.5rem;
-            text-shadow: none;
         }
         
         .subtitle { 
@@ -96,7 +99,6 @@ st.markdown("""
             font-weight: 600;
         }
         
-        /* Confidence Text - GELAP */
         .confidence-label {
             color: var(--color-brown) !important;
             font-size: 0.9rem;
@@ -109,7 +111,6 @@ st.markdown("""
             font-size: 1rem;
         }
         
-        /* Confidence Bar */
         .confidence-bar {
             height: 10px;
             background: #E8E4E8;
@@ -161,7 +162,7 @@ st.markdown("""
             color: white !important;
         }
         
-        /* Tabs - GELAP COKLAT */
+        /* Tabs */
         .stTabs [data-baseweb="tab-list"] { 
             gap: 0.5rem; 
             background: white;
@@ -183,61 +184,100 @@ st.markdown("""
             color: white !important;
         }
         
-        /* Info/Alert Boxes - TEKS GELAP */
+        /* ============================================
+           DARK BACKGROUND ELEMENTS = LIGHT TEXT
+           ============================================ */
+        
+        /* File Uploader Drop Zone - DARK BG */
+        [data-testid="stFileUploader"] section {
+            background-color: #2B2D31 !important;
+        }
+        
+        [data-testid="stFileUploader"] * {
+            color: var(--color-white) !important;
+        }
+        
+        [data-testid="stFileUploader"] label {
+            color: var(--color-white) !important;
+        }
+        
+        [data-testid="stFileUploader"] p {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        
+        /* Expander Header - DARK BG */
+        .streamlit-expanderHeader {
+            background-color: var(--color-dark) !important;
+            color: var(--color-white) !important;
+        }
+        
+        .streamlit-expanderHeader * {
+            color: var(--color-white) !important;
+        }
+        
+        .streamlit-expanderHeader svg {
+            fill: var(--color-white) !important;
+        }
+        
+        /* Expander Content - LIGHT BG */
+        .streamlit-expanderContent {
+            background-color: white !important;
+            color: var(--color-dark) !important;
+        }
+        
+        .streamlit-expanderContent * {
+            color: var(--color-dark) !important;
+        }
+        
+        /* Alert Boxes - LIGHT BG, DARK TEXT */
         .stAlert {
             border-radius: 12px;
             border: none;
-            color: var(--color-dark) !important;
+            background-color: white !important;
         }
         
         .stAlert * {
             color: var(--color-dark) !important;
         }
         
-        .stInfo, .stInfo * {
-            color: var(--color-dark) !important;
-            background-color: rgba(240, 225, 158, 0.3) !important;
+        .stInfo {
+            background-color: rgba(240, 225, 158, 0.4) !important;
+            border-left: 4px solid var(--color-yellow);
         }
         
-        .stSuccess, .stSuccess * {
-            color: var(--color-dark) !important;
+        .stSuccess {
             background-color: rgba(242, 242, 242, 0.9) !important;
+            border-left: 4px solid var(--color-dark);
         }
         
-        .stWarning, .stWarning * {
-            color: var(--color-dark) !important;
+        .stWarning {
+            background-color: rgba(240, 225, 158, 0.4) !important;
+            border-left: 4px solid var(--color-yellow);
         }
         
-        /* File Uploader - TEKS GELAP */
-        .stFileUploader {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            box-shadow: 0 2px 8px rgba(62, 51, 63, 0.1);
+        /* Sidebar (if used) - DARK BG */
+        section[data-testid="stSidebar"] {
+            background-color: var(--color-dark);
         }
         
-        .stFileUploader * {
-            color: var(--color-dark) !important;
+        section[data-testid="stSidebar"] * {
+            color: var(--color-white) !important;
         }
         
-        /* Expander - TEKS GELAP */
-        .streamlit-expanderHeader, .streamlit-expanderHeader * {
-            color: var(--color-dark) !important;
-            background: white;
-        }
-        
-        .streamlit-expanderContent, .streamlit-expanderContent * {
-            color: var(--color-brown) !important;
-            background: white;
-        }
-        
-        /* Footer - GELAP COKLAT */
+        /* Footer - LIGHT BG, DARK TEXT */
         footer {
+            background-color: transparent !important;
             color: var(--color-brown) !important;
         }
         
         footer * {
             color: var(--color-brown) !important;
+        }
+        
+        /* Code blocks - DARK BG */
+        pre, code {
+            background-color: #2B2D31 !important;
+            color: var(--color-white) !important;
         }
         
         /* Mobile Optimization */
