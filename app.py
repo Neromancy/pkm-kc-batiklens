@@ -5,115 +5,349 @@ import torch.nn.functional as F
 from torchvision import models, transforms
 from PIL import Image
 import json
+import os
 
-# 1. SETUP TAMPILAN MOBILE-FRIENDLY
-# Mengunci layout agar di tengah dan menyembunyikan sidebar otomatis di HP
-st.set_page_config(page_title="BatikLens AI", page_icon="🔍", layout="centered", initial_sidebar_state="collapsed")
+# =====================================================================
+# 1. PAGE CONFIGURATION (Mobile-Optimized)
+# =====================================================================
+st.set_page_config(
+    page_title="BatikLens AI",
+    page_icon="🔍",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'About': "# BatikLens AI 🔍\nPrototipe PKM-KC 2026\n\nModel: ResNet-18 Fine-Tuned"
+    }
+)
 
-# Sedikit injeksi CSS agar jarak margin atas di HP tidak terlalu jauh (memaksimalkan layar)
+# =====================================================================
+# 2. CUSTOM CSS (Enhanced Mobile UI)
+# =====================================================================
 st.markdown("""
     <style>
-        .block-container { padding-top: 2rem; padding-bottom: 2rem; }
+        /* Global */
+        .stApp { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .main .block-container { 
+            padding-top: 1rem; 
+            padding-bottom: 2rem;
+            max-width: 600px;
+        }
+        
+        /* Title Styling */
+        h1 { 
+            color: white; 
+            text-align: center; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 2rem !important;
+        }
+        .subtitle { 
+            color: rgba(255,255,255,0.9); 
+            text-align: center; 
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+        
+        /* Prediction Cards */
+        .prediction-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-left: 4px solid #667eea;
+        }
+        .prediction-card.high-confidence { border-left-color: #10b981; }
+        .prediction-card.medium-confidence { border-left-color: #f59e0b; }
+        .prediction-card.low-confidence { border-left-color: #ef4444; }
+        
+        .confidence-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Image Container */
+        .image-container {
+            background: white;
+            border-radius: 16px;
+            padding: 1rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        /* Buttons & Tabs */
+        .stTabs [data-baseweb="tab-list"] { 
+            gap: 0.5rem; 
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 0.25rem;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background: white;
+            border-radius: 10px;
+            color: #374151;
+            font-weight: 500;
+        }
+        .stTabs [aria-selected="true"] {
+            background: #667eea !important;
+            color: white !important;
+        }
+        
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5rem !important; }
+            .subtitle { font-size: 0.9rem; }
+            .prediction-card { padding: 0.875rem; }
+        }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔍 BatikLens")
-st.caption("Prototipe AI Identifikasi Batik - PKM-KC 2026")
+# =====================================================================
+# 3. HEADER SECTION
+# =====================================================================
+st.markdown("<h1>🔍 BatikLens AI</h1>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>Identifikasi Motif Batik dengan Deep Learning • ResNet-18</p>", unsafe_allow_html=True)
 
-# 2. LOAD DATABASE JSON
+# =====================================================================
+# 4. LOAD DATABASE (Cached)
+# =====================================================================
 @st.cache_data
 def load_database():
-    with open('database.json', 'r') as file:
-        return json.load(file)
+    """Load batik classification database from JSON"""
+    try:
+        with open('database.json', 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        st.error("❌ File `database.json` tidak ditemukan!")
+        return {}
+    except json.JSONDecodeError:
+        st.error("❌ Format `database.json` tidak valid!")
+        return {}
 
 db_batik = load_database()
 
-# 3. LOAD MODEL AI (Di-cache agar tidak reload setiap ada interaksi)
+# =====================================================================
+# 5. LOAD MODEL (ResNet-18, CPU-Optimized)
+# =====================================================================
 @st.cache_resource
 def load_model():
-    model = models.mobilenet_v2(weights=None)
-    model.classifier[1] = nn.Linear(model.last_channel, 20)
-    # map_location='cpu' SANGAT PENTING agar bisa jalan di server gratisan yang tidak punya GPU
-    model.load_state_dict(torch.load('batik_model_best_V2_Unfitted.pth', map_location=torch.device('cpu')))
-    model.eval()
-    return model
+    """Load fine-tuned ResNet-18 model with CPU compatibility"""
+    try:
+        # Initialize ResNet-18 with pre-trained weights (for architecture)
+        model = models.resnet18(weights=None)
+        
+        # Modify final layer to match your number of classes (20)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Sequential(
+            nn.Dropout(p=0.3),
+            nn.Linear(num_ftrs, 20)  # Match your trained output
+        )
+        
+        # Load state dict with CPU mapping
+        model_path = 'batik_model_resnet_best.pth'
+        if not os.path.exists(model_path):
+            model_path = 'batik_model_best_V2_Unfitted.pth'  # Fallback
+            
+        model.load_state_dict(
+            torch.load(model_path, map_location=torch.device('cpu'), weights_only=True)
+        )
+        model.eval()
+        return model
+    except Exception as e:
+        st.error(f"❌ Gagal memuat model: {str(e)}")
+        return None
 
 model = load_model()
 
-# 4. ATURAN TRANSLASI GAMBAR KE TENSOR
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])
-])
+# =====================================================================
+# 6. IMAGE PREPROCESSING (Must Match Training)
+# =====================================================================
+def preprocess_image(image: Image.Image) -> torch.Tensor:
+    """Preprocess image to match ResNet-18 training transforms"""
+    transform = transforms.Compose([
+        transforms.Resize(256),                    # Match validation transform
+        transforms.CenterCrop(224),                # Match validation transform
+        transforms.ToTensor(),
+        transforms.Normalize(                      # ImageNet stats
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        )
+    ])
+    return transform(image).unsqueeze(0)  # Add batch dimension
 
-# 5. UI INPUT: TAB UNTUK HP (Kamera vs Galeri)
-# Tab jauh lebih ramah sentuhan (touch-friendly) di HP dibanding radio button
-tab1, tab2 = st.tabs(["📸 Buka Kamera", "📁 Pilih dari Galeri"])
+# =====================================================================
+# 7. PREDICTION FUNCTION
+# =====================================================================
+def predict(model, image_tensor, top_k=3):
+    """Generate top-K predictions with confidence scores"""
+    with torch.no_grad():
+        output = model(image_tensor)
+        probabilities = F.softmax(output[0], dim=0)
+        top_probs, top_indices = torch.topk(probabilities, top_k)
+        
+        results = []
+        for prob, idx in zip(top_probs, top_indices):
+            results.append({
+                'class_id': str(idx.item()),
+                'confidence': prob.item() * 100,
+                'raw_prob': prob.item()
+            })
+        return results
 
-file_gambar = None
+# =====================================================================
+# 8. UI: IMAGE INPUT (Camera + Gallery Tabs)
+# =====================================================================
+tab1, tab2 = st.tabs(["📸 Kamera", "📁 Galeri"])
+
+uploaded_file = None
 
 with tab1:
-    st.write("Arahkan kamera HP Anda ke kain batik.")
-    # Kamera langsung terbuka di browser HP
-    input_kamera = st.camera_input("Ambil Foto Batik") 
-    if input_kamera:
-        file_gambar = input_kamera
+    st.markdown("### 📸 Ambil Foto Langsung")
+    st.info("💡 Tips: Pastikan pencahayaan cukup dan motif batik terlihat jelas")
+    camera_file = st.camera_input("Ambil Foto Batik", key="camera_input")
+    if camera_file:
+        uploaded_file = camera_file
 
 with tab2:
-    st.write("Atau unggah foto batik dari memori HP Anda.")
-    # Membuka galeri foto HP
-    input_galeri = st.file_uploader("Unggah Foto", type=["jpg", "jpeg", "png"])
-    if input_galeri:
-        file_gambar = input_galeri
+    st.markdown("### 📁 Unggah dari Galeri")
+    gallery_file = st.file_uploader(
+        "Pilih gambar batik",
+        type=["jpg", "jpeg", "png", "webp"],
+        key="gallery_input",
+        help="Format didukung: JPG, JPEG, PNG, WebP"
+    )
+    if gallery_file:
+        uploaded_file = gallery_file
 
-# 6. LOGIKA PEMROSESAN AI
-# 6. LOGIKA PEMROSESAN AI
-if file_gambar is not None:
-    # Tampilkan gambar yang akan dianalisis menyesuaikan lebar layar HP
-    image = Image.open(file_gambar).convert('RGB')
-    st.image(image, caption="Gambar yang diproses", use_container_width=True)
-
-    with st.spinner("AI sedang memindai pola matriks..."):
-        img_tensor = transform(image).unsqueeze(0)
-        
-        with torch.no_grad():
-            output = model(img_tensor)
-            
-            # Ubah output matriks mentah menjadi persentase (Softmax)
-            probabilities = F.softmax(output[0], dim=0)
-            
-            # JURUS TOP-3 PREDICTIONS (Ambil 3 probabilitas tertinggi)
-            top3_prob, top3_id = torch.topk(probabilities, 3)
-
-    # 7. TAMPILKAN HASIL DARI DATABASE
-    st.divider() # Garis pemisah UI
-    st.success("✅ Analisis Selesai! Berikut 3 kemungkinan teratas:")
+# =====================================================================
+# 9. MAIN PREDICTION LOGIC
+# =====================================================================
+if uploaded_file is not None and model is not None:
+    # Display uploaded image
+    image = Image.open(uploaded_file).convert('RGB')
     
-    # Looping untuk menampilkan 3 hasil prediksi
-    for i in range(3):
-        id_tebakan = str(top3_id[i].item())
-        persentase = top3_prob[i].item() * 100
-        
-        # Cek apakah ID ada di database.json
-        if id_tebakan in db_batik:
-            data = db_batik[id_tebakan]
-            
-            # Membuat desain "Card" (Kartu) yang elegan untuk setiap tebakan
-            with st.container():
-                st.subheader(f"#{i+1} - {data['nama']}")
+    with st.container():
+        st.markdown('<div class="image-container">', unsafe_allow_html=True)
+        st.image(image, caption="📷 Gambar yang dianalisis", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Prediction button for better UX
+    if st.button("🔍 Analisis Motif Batik", type="primary", use_container_width=True):
+        with st.spinner("🤖 AI sedang menganalisis pola batik..."):
+            try:
+                # Preprocess and predict
+                img_tensor = preprocess_image(image)
+                predictions = predict(model, img_tensor, top_k=3)
                 
-                # Menampilkan Bar Persentase Visual (Progress Bar)
-                st.write(f"**Tingkat Keyakinan: {persentase:.1f}%**")
-                # Streamlit progress bar butuh angka integer 0-100
-                st.progress(int(persentase)) 
+                # Display results
+                st.divider()
+                st.success("✅ Analisis Selesai!")
                 
-                st.markdown(f"**📍 Asal Daerah:** {data['asal']}")
-                st.info(f"**📖 Filosofi:** {data['filosofi']}")
-                st.write("---") # Garis pemisah antar kartu
+                for i, pred in enumerate(predictions):
+                    class_id = pred['class_id']
+                    confidence = pred['confidence']
+                    
+                    # Determine confidence tier for styling
+                    if confidence >= 70:
+                        tier = "high-confidence"
+                        emoji = "🎯"
+                    elif confidence >= 40:
+                        tier = "medium-confidence"
+                        emoji = "🤔"
+                    else:
+                        tier = "low-confidence"
+                        emoji = "❓"
+                    
+                    # Fetch database info
+                    if class_id in db_batik:
+                        data = db_batik[class_id]
+                        name = data.get('nama', f'Kelas {class_id}')
+                        origin = data.get('asal', 'Tidak diketahui')
+                        philosophy = data.get('filosofi', 'Tidak tersedia')
+                    else:
+                        name = f'Kelas {class_id} (Unlabeled)'
+                        origin = 'Data belum tersedia'
+                        philosophy = 'Silakan update database.json'
+                    
+                    # Render prediction card
+                    st.markdown(f"""
+                        <div class="prediction-card {tier}">
+                            <h4 style="margin:0 0 0.5rem 0">{emoji} #{i+1} - {name}</h4>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem">
+                                <span style="font-size:0.9rem;color:#6b7280">Keyakinan</span>
+                                <span style="font-weight:600;color:#374151">{confidence:.1f}%</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width:{min(confidence, 100)}%"></div>
+                            </div>
+                            <p style="margin:0.5rem 0 0 0;font-size:0.9rem">
+                                <strong>📍 Asal:</strong> {origin}<br>
+                                <strong>📖 Filosofi:</strong> {philosophy}
+                            </p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Celebration effect for high-confidence top prediction
+                    if i == 0 and confidence >= 80:
+                        st.balloons()
                 
-                # Efek balon perayaan JIKA tebakan pertama sangat yakin (> 80%)
-                if i == 0 and persentase > 80.0:
-                    st.balloons()
-        else:
-            st.warning(f"Terdeteksi sebagai ID Kelas {id_tebakan} ({persentase:.1f}%), tapi data belum ada di database.json.")
+                # Warning for low-confidence predictions
+                if predictions[0]['confidence'] < 40:
+                    st.warning("⚠️ Keyakinan rendah. Coba ambil foto dengan pencahayaan lebih baik atau sudut yang lebih jelas.")
+                    
+            except Exception as e:
+                st.error(f"❌ Terjadi kesalahan saat prediksi: {str(e)}")
+                st.info("💡 Pastikan model dan database.json sesuai dengan arsitektur ResNet-18")
+
+# =====================================================================
+# 10. FOOTER & HELP SECTION
+# =====================================================================
+st.divider()
+
+with st.expander("❓ Bantuan & Informasi"):
+    st.markdown("""
+    ### 🎯 Cara Menggunakan BatikLens
+    1. **Ambil foto** motif batik dengan kamera atau unggah dari galeri
+    2. **Pastikan**: 
+       - Motif batik terlihat jelas dan terpusat
+       - Pencahayaan cukup (hindari bayangan berat)
+       - Hindari foto blur atau terlalu jauh
+    3. **Tekan "Analisis"** dan lihat 3 prediksi teratas
+    
+    ### 📊 Interpretasi Hasil
+    - 🎯 **>70%**: Prediksi sangat akurat
+    - 🤔 **40-70%**: Prediksi cukup meyakinkan
+    - ❓ **<40%**: Coba ambil foto ulang dengan kondisi lebih baik
+    
+    ### 🔧 Teknis
+    - **Model**: ResNet-18 Fine-Tuned
+    - **Input**: 224×224 pixels, ImageNet normalization
+    - **Akurasi Validasi**: ~74%
+    - **Inference**: CPU-optimized untuk kompatibilitas luas
+    """)
+
+st.markdown("""
+    <div style="text-align:center;color:rgba(255,255,255,0.8);font-size:0.8rem;margin-top:2rem">
+        <p>🔬 BatikLens AI • Prototipe PKM-KC 2026</p>
+        <p>Model: ResNet-18 • Accuracy: 73.98%</p>
+    </div>
+""", unsafe_allow_html=True)
+
+# =====================================================================
+# 11. ERROR HANDLING: Model/Database Missing
+# =====================================================================
+if model is None:
+    st.error("⚠️ Model tidak dapat dimuat. Pastikan file `batik_model_resnet_best.pth` tersedia.")
+    st.info("💡 Solusi: Jalankan training script terlebih dahulu untuk menghasilkan model.")
+
+if not db_batik:
+    st.warning("⚠️ Database kosong. Prediksi akan menampilkan ID kelas tanpa informasi detail.")
+    st.info("💡 Solusi: Update file `database.json` dengan informasi motif batik.")
